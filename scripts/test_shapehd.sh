@@ -2,19 +2,20 @@
 
 # Test ShapeHD
 
-out_dir="./output/test"
-net1=./downloads/models/marrnet1_with_minmax_new.pt
-net2=./downloads/models/shapehd_new.pt
-rgb_pattern='./downloads/data/test/shapehd/*_rgb.*'
-mask_pattern='./downloads/data/test/shapehd/*_mask.*'
+out_dir="/media/Data/dsl-course/GenRe_Testing/output/shapehd_paper/"
+net1=./downloads/models/marrnet1_with_minmax.pt # Pre-trained model
+net2=./downloads/models/shapehd.pt              # Pre-trained model
 
-if [ $# -lt 1 ]; then
-    echo "Usage: $0 gpu[ ...]"
+rgb_pattern='/media/Data/dsl-course/affordances_dataset/all_objects_hook_draw/'"$2"'/rgb/*.jpg'
+mask_pattern='/media/Data/dsl-course/affordances_dataset/all_objects_hook_draw/'"$2"'/mask/*.tif'
+
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 gpu obj_name [ ...]"
     exit 1
 fi
 gpu="$1"
 shift # shift the remaining arguments
-
+shift # obj_name / folder to test
 set -e
 
 
