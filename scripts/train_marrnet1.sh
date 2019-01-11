@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-outdir=./output/marrnet1
+outdir=/media/Data/dsl-course/GenRe_Training/output/marrnet1
 
 if [ $# -lt 2 ]; then
     echo "Usage: $0 gpu class[ ...]"
@@ -18,7 +18,7 @@ source activate shaperecon
 python train.py \
     --net marrnet1 \
     --pred_depth_minmax \
-    --dataset shapenet \
+    --dataset ycb_genre \
     --classes "$class" \
     --batch_size 4 \
     --epoch_batches 2500 \
@@ -37,3 +37,5 @@ python train.py \
     $*
 
 source deactivate
+
+
