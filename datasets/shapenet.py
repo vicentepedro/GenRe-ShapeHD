@@ -7,7 +7,7 @@ import util.util_img
 
 
 class Dataset(data.Dataset):
-    data_root = './downloads/data/shapenet'
+    data_root = '/media/Data/dsl-course/shapenet'
     list_root = join(data_root, 'status')
     status_and_suffix = {
         'rgb': {
