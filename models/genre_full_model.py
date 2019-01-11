@@ -189,11 +189,13 @@ class Model_test(Model):
         pack = {}
         pack['pred_voxel'] = pred['pred_voxel'].cpu().numpy()
         pack['rgb_path'] = batch['rgb_path']
-        #pack['pred_proj_depth'] = pred['pred_proj_depth'].cpu().numpy()
-        #pack['pred_proj_sph_full'] = pred['pred_proj_sph_full'].cpu().numpy()
-        #pack['pred_sph_partial'] = pred['pred_sph_partial'].cpu().numpy()
-        #pack['pred_depth'] = pred['pred_depth'].cpu().numpy()
-        #pack['pred_depth_minmax'] = pred['depth_minmax'].cpu().numpy()
+        pack['pred_proj_depth'] = pred['pred_proj_depth'].cpu().numpy()
+        pack['pred_proj_sph_full'] = pred['pred_proj_sph_full'].cpu().numpy()
+        pack['pred_sph_partial'] = pred['pred_sph_partial'].cpu().numpy()
+        pack['pred_sph_full'] = pred['pred_sph_full'].cpu().numpy()
+        pack['pred_sph_full'] = pred['pred_sph_full'].cpu().numpy()
+        pack['pred_depth'] = pred['pred_depth'].cpu().numpy()
+        pack['pred_depth_minmax'] = pred['depth_minmax'].cpu().numpy()
         #pack['pred__minmax'] = pred['depth_minmax'].cpu().numpy()
         if add_gt:
             pack['gt_voxel'] = batch['voxel'].numpy()
@@ -206,6 +208,7 @@ class Model_test(Model):
         pred_abs_depth = self.net.depth_and_inpaint.get_abs_depth(pred_1, self._input)
         proj = self.net.depth_and_inpaint.proj_depth(pred_abs_depth)
         pred_depth = self.net.depth_and_inpaint.base_class.postprocess(pred_1['depth'].detach())
+        pred_1['pred_depth'] = pred_depth
         silhou = self.net.base_class.postprocess(self._input.silhou).detach()
         pred_depth = pred_depth.cpu().numpy()
         pred_depth_minmax = pred_1['depth_minmax'].detach().cpu().numpy()[0, :]
