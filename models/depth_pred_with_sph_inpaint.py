@@ -6,6 +6,7 @@ from models.marrnet1 import Net as Net1
 from networks.uresnet import Net_inpaint as Uresnet
 from toolbox.cam_bp.cam_bp.modules.camera_backprojection_module import Camera_back_projection_layer
 from toolbox.spherical_proj import render_spherical, sph_pad
+from util.util_sph import render_spherical as render_spherical_util
 import torch.nn.functional as F
 
 
@@ -29,14 +30,14 @@ class Model(DepthModel):
         super(Model, self).__init__(opt, logger)
         self.joint_train = opt.joint_train
         if not self.joint_train:
-            self.requires = ['silhou', 'rgb', 'spherical']
+            self.requires = ['silhou', 'rgb', 'spherical','trans_mat']
             self.gt_names = ['spherical_object']
             self._metrics = ['spherical']
         else:
             self.requires.append('spherical')
             self.gt_names = ['depth', 'silhou', 'normal', 'depth_minmax', 'spherical_object']
             self._metrics.append('spherical')
-        self.input_names = ['rgb', 'silhou', 'spherical_depth']
+        self.input_names = ['rgb', 'silhou', 'spherical_depth','trans_mat']
         self.net = Net(opt, Model)
         self.optimizer = self.adam(
             self.net.parameters(),
@@ -73,7 +74,7 @@ class Model(DepthModel):
             pack = super(Model, self).pack_output(pred, batch, add_gt=False)
         pack['pred_spherical_full'] = pred['pred_sph_full'].data.cpu().numpy()
         pack['pred_spherical_partial'] = pred['pred_sph_partial'].data.cpu().numpy()
-        pack['proj_depth'] = pred['proj_depth'].data.cpu().numpy()
+        #pack['proj_depth'] = pred['proj_depth'].data.cpu().numpy()
         pack['rgb_path'] = batch['rgb_path']
         if add_gt:
             pack['gt_spherical_full'] = batch['spherical_object'].numpy()
@@ -103,6 +104,7 @@ class Net(nn.Module):
         self.base_class = base_class
         self.proj_depth = Camera_back_projection_layer()
         self.render_spherical = render_spherical()
+        #self.render_spherical_util = render_spherical_util()
         self.joint_train = opt.joint_train
         self.load_offline = opt.load_offline
         self.padding_margin = opt.padding_margin
@@ -116,16 +118,21 @@ class Net(nn.Module):
                 out_1 = self.net1(input_struct)
         else:
             out_1 = self.net1(input_struct)
+        '''
         pred_abs_depth = self.get_abs_depth(out_1, input_struct)
         proj = self.proj_depth(pred_abs_depth)
         if self.load_offline:
             sph_in = input_struct.spherical_depth
         else:
             sph_in = self.render_spherical(torch.clamp(proj * 50, 1e-5, 1 - 1e-5))
+        '''
+        out_1['trans_mat'] = input_struct.trans_mat#['trans_mat']
+        sph_in = render_spherical_util(out_1,128)
+        #print(sph_in.shape)
         # pad sph_in to approximate boundary conditions
         sph_in = sph_pad(sph_in, self.padding_margin)
         out_2 = self.net2(sph_in)
-        out_1['proj_depth'] = proj * 50
+        #out_1['proj_depth'] = proj * 50
         out_1['pred_sph_partial'] = sph_in
         out_1['pred_sph_full'] = out_2['spherical']
         return out_1
