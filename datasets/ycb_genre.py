@@ -7,7 +7,7 @@ import util.util_img
 
 
 class Dataset(data.Dataset):
-    data_root = '/media/Data/dsl-course/ycb_genre'
+    data_root = '/media/Data/dsl-course/ycb_genre2'
     list_root = join(data_root, 'status')
     status_and_suffix = {
         'rgb': {
@@ -20,7 +20,11 @@ class Dataset(data.Dataset):
         },
         'depth_minmax': {
             'status': 'depth_minmax.txt',
-            'suffix': '.npy',
+            'suffix': '_minmax.npy',
+        },
+        'trans_mat': {
+            'status': 'trans_mat.txt',
+            'suffix': '_trans_mat.npy',
         },
         'silhou': {
             'status': 'silhou.txt',
@@ -32,7 +36,7 @@ class Dataset(data.Dataset):
         },
         'voxel': {
             'status': 'vox_rot.txt',
-            'suffix': '_gt_rotvox_samescale_128.npz'
+            'suffix': '_voxel_rot.npz'
         },
         'spherical': {
             'status': 'spherical.txt',
@@ -164,9 +168,10 @@ class Dataset(data.Dataset):
                     # Normalize to [0, 1] floats
                     im = im.astype(float) / float(np.iinfo(im.dtype).max)
                     sample_loaded[k[:-5]] = im
-                elif v.endswith('.npy'):
-                    # Right now .npy must be depth_minmax
+                elif v.endswith('_minmax.npy'):
                     sample_loaded['depth_minmax'] = np.load(v)
+                elif v.endswith('_trans_mat.npy'):
+                    sample_loaded['trans_mat'] = np.load(v)
                 elif v.endswith('_128.npz'):
                     sample_loaded['voxel'] = np.load(v)['voxel'][None, ...]
                 elif v.endswith('_spherical.npz'):
