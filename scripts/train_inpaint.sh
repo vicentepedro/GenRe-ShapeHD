@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-outdir=./output/inpaint
-net1_path=/path/to/trained/marrnet1.pt
+outdir=/media/Data/dsl-course/GenRe_Training/output/inpaint
+net1_path=/media/Data/dsl-course/GenRe_Training/output/marrnet1/marrnet1_ycb_genre_0.001_all/0/best.pt
+#net1_path=/path/to/trained/marrnet1.pt
 
 if [ $# -lt 2 ]; then
     echo "Usage: $0 gpu class[ ...]"
@@ -19,7 +20,7 @@ source activate shaperecon
 python train.py \
     --net depth_pred_with_sph_inpaint \
     --pred_depth_minmax \
-    --dataset shapenet \
+    --dataset ycb_genre \
     --classes "$class" \
     --batch_size 4 \
     --epoch_batches 2000 \
