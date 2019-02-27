@@ -13,6 +13,10 @@ from copy import deepcopy
 import numpy as np
 import cv2
 
+# tmp
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
 # cv2 convinience constants so that no need to import cv2 just for these
 IMREAD_UNCHANGED = cv2.IMREAD_UNCHANGED
 IMREAD_COLOR = cv2.IMREAD_COLOR
@@ -50,9 +54,10 @@ def imread_wrapper(*args, output_channel_order='RGB'):
     return im
 
 
-def depth_to_mesh_df(depth_im, th, jitter, upsample=0.6, cam_dist=2.0):
+def depth_to_mesh_df(depth_im, th, jitter, upsample=0.6, cam_loc=[0., 0., 0.], res=128, enlarge=4, debug=False):
     from util.util_camera import tsdf_renderer
     depth = depth_im[:, :, 0]
+    #import pdb;pdb.set_trace()
     mask = np.where(depth == 0, -1.0, 1.0)
     depth = 1 - depth
     t = tsdf_renderer()
@@ -65,28 +70,60 @@ def depth_to_mesh_df(depth_im, th, jitter, upsample=0.6, cam_dist=2.0):
     scale = thh - thl
     depth = depth * scale
     t.depth = (depth + thl) * mask
-    t.camera.focal_length = 0.05
-    t.camera.sensor_width = 0.03059411708155671
-    t.camera.position = np.array([-cam_dist, 0, 0])
+    t.camera.focal_length = 35.27039762259147
+    t.camera.sensor_width = 21.160025
+    t.camera.position = -np.array([cam_loc[2], -cam_loc[1], cam_loc[0]])
+    #t.camera.res = [640, 480]
     t.camera.res = [480, 480]
     t.camera.rx = np.array([0, 0, 1])
     t.camera.ry = np.array([0, 1, 0])
     t.camera.rz = -np.array([1, 0, 0])
+    #upsample = 0.2
     t.back_project_ptcloud(upsample=upsample)
-    tdf = np.ones([128, 128, 128]) / 128
-    cnt = np.zeros([128, 128, 128])
+    tdf = np.ones([res, res, res]) / res
+    cnt = np.zeros([res, res, res])
+    #plt.figure()
+    #plt.imshow(depth.squeeze()*255)
+    #plt.figure()
+    #plt.imshow(mask.squeeze()*255)
+    #print(th)    
+    #print(cam_loc)
+    if(debug):
+        plt.figure()
+        plt.imshow(depth.squeeze()*255)
+        plt.figure()
+        plt.imshow(mask.squeeze()*255)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
     for pts in t.ptcld:
-        pt = pts  # np.array([-pts[2], -pts[0], pts[1]])
-        ids = np.floor((pt + 0.5) * 128).astype(int)
+
+        pt = pts*enlarge  # np.array([-pts[2], -pts[0], pts[1]])
+        #if np.random.randint(10)==0:
+        if(debug):
+            ax.scatter(pt[0], pt[1], pt[2], c='b', marker='o')
+        # pt = enlarge*np.array([-pts[2], pts[0], pts[1]])
+        ids = np.floor((pt + 0.5) * res).astype(int)
         if np.any(np.abs(pt) >= 0.5):
             continue
-        center = ((ids + 0.5) * 1 / 128) - 0.5
+        center = ((ids + 0.5) * 1 / res) - 0.5
         dist = ((center[0] - pt[0])**2 + (center[1] - pt[1])
                 ** 2 + (center[2] - pt[2])**2)**0.5
         n = cnt[ids[0], ids[1], ids[2]]
         tdf[ids[0], ids[1], ids[2]] = (
             tdf[ids[0], ids[1], ids[2]] * n + dist) / (n + 1)
         cnt[ids[0], ids[1], ids[2]] += 1
+
+    if(debug):
+        ax.set_xlabel('X Label')
+        ax.set_ylabel('Y Label')
+        ax.set_zlabel('Z Label')
+        plt.show()
+
+    #print(np.amax(cnt))
+    
+  
+
     return tdf
 
 
