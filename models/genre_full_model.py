@@ -33,7 +33,7 @@ class Model(DepthInpaintModel):
         if self.joint_train:
             self.requires.append('voxel')
         else:
-            self.requires = ['rgb', 'silhou', 'voxel']
+            self.requires = ['rgb', 'silhou', 'voxel','trans_mat']
         self.gt_names.append('voxel')
         self._metrics += ['voxel_loss', 'surface_loss']
         self.net = Net(opt, Model)
@@ -123,7 +123,7 @@ class Net(nn.Module):
         proj_depth = out_1['proj_depth']
         pred_sph = out_1['pred_sph_full']
         pred_proj_sph = self.backproject_spherical(pred_sph)
-        proj_depth = torch.clamp(proj_depth / 50, 1e-5, 1 - 1e-5)
+        proj_depth = torch.clamp(proj_depth, 1e-5, 1 - 1e-5)
         refine_input = torch.cat((pred_proj_sph, proj_depth), dim=1)
         pred_voxel = self.refine_net(refine_input)
         out_1['pred_proj_depth'] = proj_depth
@@ -196,7 +196,7 @@ class Model_test(Model):
         pack['pred_sph_full'] = pred['pred_sph_full'].cpu().numpy()
         pack['pred_depth'] = pred['pred_depth'].cpu().numpy()
         pack['pred_depth_minmax'] = pred['depth_minmax'].cpu().numpy()
-        #pack['pred__minmax'] = pred['depth_minmax'].cpu().numpy()
+        pack['pred__minmax'] = pred['depth_minmax'].cpu().numpy()
         if add_gt:
             pack['gt_voxel'] = batch['voxel'].numpy()
         return pack

@@ -127,12 +127,12 @@ class Net(nn.Module):
             sph_in = self.render_spherical(torch.clamp(proj * 50, 1e-5, 1 - 1e-5))
         '''
         out_1['trans_mat'] = input_struct.trans_mat#['trans_mat']
-        sph_in = render_spherical_util(out_1,128)
+        sph_in, proj = render_spherical_util(out_1,128)
         #print(sph_in.shape)
         # pad sph_in to approximate boundary conditions
         sph_in = sph_pad(sph_in, self.padding_margin)
         out_2 = self.net2(sph_in)
-        #out_1['proj_depth'] = proj * 50
+        out_1['proj_depth'] = proj #* 50
         out_1['pred_sph_partial'] = sph_in
         out_1['pred_sph_full'] = out_2['spherical']
         return out_1
