@@ -172,8 +172,12 @@ class Dataset(data.Dataset):
                     sample_loaded['depth_minmax'] = np.load(v)
                 elif v.endswith('_trans_mat.npy'):
                     sample_loaded['trans_mat'] = np.load(v)
-                elif v.endswith('_128.npz'):
+                elif v.endswith('_voxel_rot.npz'):
                     sample_loaded['voxel'] = np.load(v)['voxel'][None, ...]
+                    #TODO - remove this hack. Our model has 129x129x129 voxel representation
+                    if(sample_loaded['voxel'].shape[1]>128):
+                        remove = - (sample_loaded['voxel'].shape[1]-128)
+                        sample_loaded['voxel'] = sample_loaded['voxel'][:,:remove,:remove,:remove]
                 elif v.endswith('_spherical.npz'):
                     spherical_data = np.load(v)
                     sample_loaded['spherical_object'] = spherical_data['obj_spherical'][None, ...]
